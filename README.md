@@ -4,7 +4,7 @@ This is the repository for the technical test of creating a Store class and a Re
 
 ## Context
 
-We are dealing with a runtime-defined project with a lot of user-generated content and data. To efficiently manage this data, we needed a way to store generated state and define recursive permission strategies. This led to the creation of the Store class and Restrict decorator. Any entity in our application can inherit from these classes, thereby having structured storage and permission-based access control.
+We are dealing with a runtime-defined project with a lot of user-generated content and data. To efficiently manage this data, we needed a way to store generated state and define permission strategies. This led to the creation of the Store class and Restrict decorator. Any entity in our application can inherit from these classes, thereby having structured storage and permission-based access control.
 
 ## Task Description
 
@@ -28,15 +28,16 @@ In this task, you need to complete the `Store` class and the `Restrict` decorato
 
 You need to complete the following parts of the codebase:
 
-- The `Restrict` decorator function in `index.ts`
-- The methods of the `Store` class in `index.ts`
+- The `Restrict` decorator function in `store.ts`
+- The methods of the `Store` class in `store.ts`
+- Add any additional code needed for your solution
 
 You can use the test cases provided in `test.ts` to validate your implementation.
 
 ## How to submit your solution
 
 1. Fork this repository.
-2. Implement the `Restrict` decorator and complete the methods of the `Store` class.
+2. Implement the `Restrict` decorator, `Store` class and add any additional code needed.
 3. Push your changes to your forked repository.
 4. Send us the link to your forked repository.
 
