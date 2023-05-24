@@ -71,4 +71,8 @@ describe("AdminStore class", () => {
   it("should disallow reading nested keys in admin", () => {
     expect(() => adminStore.read("profile:name")).toThrow();
   });
+
+  it("should be allowed to read from a function result", () => {
+    expect(adminStore.read("getCredentials:username")).toBe("user1");
+  });
 });
