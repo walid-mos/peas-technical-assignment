@@ -9,15 +9,14 @@ export class AdminStore extends Store {
   public user: UserStore;
   @Restrict()
   name: string = "John Doe";
+  @Restrict("rw")
+  getCredentials = (): Store => {
+    return credentialStore;
+  };
 
   constructor(user: UserStore) {
     super();
     this.defaultPolicy = "none";
     this.user = user;
-  }
-
-  @Restrict("rw")
-  getCredentials(): Store {
-    return credentialStore;
   }
 }

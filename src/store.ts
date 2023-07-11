@@ -1,18 +1,26 @@
-import { JSONObject, JSONValue } from "./json-types";
+import { JSONArray, JSONObject, JSONPrimitive } from "./json-types";
 
 export type Permission = "r" | "w" | "rw" | "none";
+
+export type StoreResult = Store | JSONPrimitive | undefined;
+
+export type StoreValue =
+  | JSONObject
+  | JSONArray
+  | StoreResult
+  | (() => StoreResult);
 
 export interface IStore {
   defaultPolicy: Permission;
   allowedToRead(key: string): boolean;
   allowedToWrite(key: string): boolean;
-  read(path: string): any;
-  write(path: string, value: JSONValue): JSONValue | IStore;
+  read(path: string): StoreResult;
+  write(path: string, value: StoreValue): StoreValue;
   writeEntries(entries: JSONObject): void;
   entries(): JSONObject;
 }
 
-export function Restrict(...params: any): any {
+export function Restrict(...params: unknown[]): any {
   throw new Error("Method not implemented.");
 }
 
@@ -27,11 +35,11 @@ export class Store implements IStore {
     throw new Error("Method not implemented.");
   }
 
-  read(path: string): any {
+  read(path: string): StoreResult {
     throw new Error("Method not implemented.");
   }
 
-  write(path: string, value: JSONValue): JSONValue | IStore {
+  write(path: string, value: StoreValue): StoreValue {
     throw new Error("Method not implemented.");
   }
 
