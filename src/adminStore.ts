@@ -1,8 +1,8 @@
+import { lazy } from "./lazy";
 import { Restrict, Store } from "./store";
 import { UserStore } from "./userStore";
 
-const credentialStore = new Store();
-credentialStore.writeEntries({ username: "user1" });
+
 
 export class AdminStore extends Store {
   @Restrict("r")
@@ -10,9 +10,11 @@ export class AdminStore extends Store {
   @Restrict()
   name: string = "John Doe";
   @Restrict("rw")
-  getCredentials = (): Store => {
+  getCredentials = lazy(() => {
+    const credentialStore = new Store();
+    credentialStore.writeEntries({ username: "user1" });
     return credentialStore;
-  };
+  });
 
   constructor(user: UserStore) {
     super();

@@ -21,7 +21,6 @@ export interface IStore {
 }
 
 export function Restrict(...params: unknown[]): any {
-  throw new Error("Method not implemented.");
 }
 
 export class Store implements IStore {
