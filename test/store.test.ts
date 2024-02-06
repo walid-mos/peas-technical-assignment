@@ -240,23 +240,21 @@ describe("Test Store - Default Policy Behavior", () => {
   it("disallows writing a key with with default read permission", () => {
     class TestStore extends Store {
       public defaultPolicy: Permission = "r";
-      public nonRestrictedProp?: string;
+      public defaultRestrictedProp?: string;
     }
     const testStore = new TestStore();
     expect(() => {
-      testStore.write("nonRestrictedProp", "testValue");
+      testStore.write("defaultRestrictedProp", "testValue");
     }).toThrow(Error);
   });
 
   it("allows writing a key with no explicit permissions", () => {
     class TestStore extends Store {
-      public defaultPolicy: Permission = "r";
-      public nonRestrictedProp?: string;
+      public defaultNonRestrictedProp?: string;
     }
     const testStore = new TestStore();
-    expect(() => {
-      testStore.write("nonRestrictedProp", "new value");
-    }).toThrow(Error);
+    testStore.write("defaultNonRestrictedProp", "testValue");
+    expect(testStore.read("defaultNonRestrictedProp")).toBe("testValue");
   });
 });
 
@@ -325,7 +323,7 @@ describe("Test Store - Permission Inheritance", () => {
       @Restrict("r")
       public parentProp = lazy(() => new ChildStore());
     }
-    class ChildStore extends ParentStore {}
+    class ChildStore extends ParentStore { }
     const baseChildStore = new ChildStore();
     const nestedChildStore = baseChildStore.read(
       "parentProp:parentProp:parentProp"
