@@ -1,5 +1,4 @@
-import { JSONArray, JSONObject, JSONPrimitive, JSONValue } from "./json-types";
-import { lazy } from "./lazy";
+import { JSONArray, JSONObject, JSONPrimitive } from "./json-types";
 
 export type Permission = "r" | "w" | "rw" | "none";
 
@@ -23,10 +22,25 @@ export interface IStore {
 }
 
 const restrictedMap: Map<unknown, Permission> = new Map()
-const readPermission: Array<Permission> = ["r", "rw"]
-const writePermission: Array<Permission> = ["w", "rw"]
+const readPermissions: Array<Permission> = ["r", "rw"]
+const writePermissions: Array<Permission> = ["w", "rw"]
 
 const buildKey = (store: string, key: string) => `${store}:${key}` 
+
+function findPermission(instance: Store, key: string): Permission | undefined {
+  let currentClass = instance.constructor;
+
+  while (currentClass?.name && currentClass.name !== 'Object') {
+    const permission = restrictedMap.get(buildKey(currentClass.name, key));
+    if (permission !== undefined) return permission;
+
+    currentClass = Object.getPrototypeOf(currentClass);
+    if (currentClass?.name === 'Store') {
+      return restrictedMap.get(buildKey('Store', key));
+    }
+  }
+  return undefined;
+}
 
 export function Restrict(permission: Permission = "none", restrictPath?: unknown): Function {
     if (restrictPath) restrictedMap.set(restrictPath, permission)
@@ -34,7 +48,7 @@ export function Restrict(permission: Permission = "none", restrictPath?: unknown
     return function (target: unknown, propertyKey: string) {
         if (!target?.constructor.name) return
         const key = buildKey(target.constructor.name, propertyKey)
-        restrictedMap.set(key, permission)   
+        restrictedMap.set(key, permission)
     }
 }
 
@@ -43,21 +57,19 @@ export class Store implements IStore {
   data = new Map()
 
   allowedToRead(key: string): boolean {
-    const specificPermissions: Permission = restrictedMap.get(buildKey(this.constructor.name, key))!
-    const isSpecificPermission = specificPermissions ? readPermission.includes(specificPermissions) : undefined
-    const isDefaultPermission = readPermission.includes(this.defaultPolicy)
-    const isAllowed = isSpecificPermission ?? isDefaultPermission
-
-    return isAllowed
+    const specificPermission = findPermission(this, key)
+    if (specificPermission !== undefined) {
+      return readPermissions.includes(specificPermission)
+    }
+    return readPermissions.includes(this.defaultPolicy)
   }
 
   allowedToWrite(key: string): boolean {
-    const specificPermissions: Permission = restrictedMap.get(buildKey(this.constructor.name, key))!
-    const isSpecificPermission = specificPermissions ? writePermission.includes(specificPermissions) : undefined
-    const isDefaultPermission = writePermission.includes(this.defaultPolicy)
-    const isAllowed = isSpecificPermission ?? isDefaultPermission
-
-    return isAllowed
+    const permission = findPermission(this, key)
+    if (permission !== undefined) {
+      return writePermissions.includes(permission)
+    }
+    return writePermissions.includes(this.defaultPolicy)
   }
 
   read(path: string): StoreResult {
@@ -83,10 +95,10 @@ export class Store implements IStore {
   }
 
   write(path: string, value: StoreValue): StoreValue {
-    const [firstKey, ...childKeys] = path.split(':') 
-    if (!firstKey || !this.allowedToWrite(firstKey)) throw new Error()
+    const [firstKey, ...childKeys] = path.split(':')
 
     if (childKeys.length > 0) {
+        if (!firstKey || !this.allowedToRead(firstKey)) throw new Error()
         let nestedStore = this.read(firstKey)
         if (!(nestedStore instanceof Store)) {
             nestedStore = new Store()
@@ -94,9 +106,17 @@ export class Store implements IStore {
         }
         return nestedStore.write(childKeys.join(':'), value)
     }
-        
-    this.data.set(path, value)
-    return this.data.get(path)
+
+    if (!firstKey || !this.allowedToWrite(firstKey)) throw new Error()
+
+    if (value?.constructor === Object) {
+        const nestedStore = new Store()
+        nestedStore.writeEntries(value as JSONObject)
+        value = nestedStore 
+    }
+
+    this.data.set(firstKey, value)
+    return value
   }
 
   writeEntries(entries: JSONObject): void {
@@ -106,9 +126,10 @@ export class Store implements IStore {
         if (typeof value === "object" && !Array.isArray(value) && value !== null) {
             store = new Store()
             this.write(key, store)
-            return store.writeEntries(value)
+            store.writeEntries(value)
+        } else {
+            store.write(key, value)
         }
-        store.write(key, value)
     }
   }
 
