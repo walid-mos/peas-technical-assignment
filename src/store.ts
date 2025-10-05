@@ -1,4 +1,5 @@
 import { JSONArray, JSONObject, JSONPrimitive } from "./json-types";
+import { lazy } from "./lazy";
 
 export type Permission = "r" | "w" | "rw" | "none";
 
@@ -25,9 +26,15 @@ const restrictedMap: Map<unknown, Permission> = new Map()
 const readPermission: Array<Permission> = ["r", "rw"]
 const writePermission: Array<Permission> = ["w", "rw"]
 
-export function Restrict(permission: Permission = "none"): Function {
+const buildKey = (store: string, key: string) => `${store}:${key}` 
+
+export function Restrict(permission: Permission = "none", restrictPath?: unknown): Function {
+    if (restrictPath) restrictedMap.set(restrictPath, permission)
+
     return function (target: unknown, propertyKey: string) {
-        restrictedMap.set([target, propertyKey], permission)   
+        if (!target?.constructor.name) return
+        const key = buildKey(target.constructor.name, propertyKey)
+        restrictedMap.set(key, permission)   
     }
 }
 
@@ -36,10 +43,9 @@ export class Store implements IStore {
   data = new Map()
 
   allowedToRead(key: string): boolean {
-    if (!readPermission.includes(this.defaultPolicy)) return false
-
-    const specificPermissions = restrictedMap.get([this, key]) as Permission
-    const isAllowed = !specificPermissions || readPermission.includes(specificPermissions)
+    const specificPermissions: Permission = restrictedMap.get(buildKey(this.constructor.name, key))!
+    const defaultPermission = readPermission.includes(this.defaultPolicy)
+    const isAllowed = readPermission.includes(specificPermissions) || defaultPermission
 
     return isAllowed
   }
@@ -47,8 +53,9 @@ export class Store implements IStore {
   allowedToWrite(key: string): boolean {
     if (!writePermission.includes(this.defaultPolicy)) return false
 
-    const specificPermissions = restrictedMap.get([this, key]) as Permission
-    const isAllowed = !specificPermissions || writePermission.includes(specificPermissions)
+    const specificPermissions: Permission = restrictedMap.get(buildKey(this.constructor.name, key))!
+    const defaultPermission = writePermission.includes(this.defaultPolicy)
+    const isAllowed = writePermission.includes(specificPermissions) || defaultPermission
 
     return isAllowed
   }
@@ -64,6 +71,12 @@ export class Store implements IStore {
         }
     }
 
+    const value = this.data.get(path) as StoreValue
+    
+    if (typeof value === "function") {
+        return lazy(value)()
+    }
+
     return this.data.get(path)
   }
 
@@ -75,6 +88,8 @@ export class Store implements IStore {
     if (keys.length > 1) {
         const childKeys = keys.shift()
         if (childKeys) {
+            const permission = restrictedMap.get([this, firstKey])
+            Restrict(permission, [this, childKeys[0]])
             return this.write(childKeys, value)
         }
     }
