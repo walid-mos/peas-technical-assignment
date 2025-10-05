@@ -3,7 +3,7 @@ export const lazy = <TResult>(fn: () => TResult): (() => TResult) => {
   let value: TResult | undefined;
   return () => {
     if (executed) {
-      return value as TResult;
+      return value! 
     }
     value = fn();
     executed = true;

@@ -1,11 +1,24 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "experimentalDecorators": true,
-    "declaration": true,
-    "strict": true,
+    // Base Options recommended for all projects
     "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "es2022",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+
+    // Enable strict type checking 
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+
+    "module": "preserve",
+    "noEmit": true,
+    "lib": ["es2022", "dom"],
+
     "types": ["jest", "node"]
   },
   "include": ["src/**/*.ts"],
