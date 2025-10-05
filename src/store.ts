@@ -12,6 +12,7 @@ export type StoreValue =
 
 export interface IStore {
   defaultPolicy: Permission;
+  data: Map<unknown, StoreValue>
   allowedToRead(key: string): boolean;
   allowedToWrite(key: string): boolean;
   read(path: string): StoreResult;
@@ -31,7 +32,8 @@ export function Restrict(permission: Permission = "none"): Function {
 }
 
 export class Store implements IStore {
-  defaultPolicy: Permission = "rw";
+  defaultPolicy = "rw" as const
+  data = new Map()
 
   allowedToRead(key: string): boolean {
     if (!readPermission.includes(this.defaultPolicy)) return false
@@ -52,11 +54,16 @@ export class Store implements IStore {
   }
 
   read(path: string): StoreResult {
-    throw new Error("Method not implemented.");
+    if (!this.allowedToRead(path)) throw new Error()
+
+    return this.data.get(path)
   }
 
   write(path: string, value: StoreValue): StoreValue {
-    throw new Error("Method not implemented.");
+    if (!this.allowedToWrite(path)) throw new Error()
+
+    this.data.set(path, value)
+    return this.data.get(path)
   }
 
   writeEntries(entries: JSONObject): void {
