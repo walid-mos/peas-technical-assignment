@@ -70,7 +70,7 @@ export class Store implements IStore {
         value = value()
     }
 
-    if (childKeys.length > 0) {
+    if (value instanceof Store && childKeys.length > 0) {
         return value.read(childKeys.join(':'))
     }
 
@@ -99,6 +99,15 @@ export class Store implements IStore {
   }
 
   entries(): JSONObject {
-    throw new Error("Method not implemented.");
+    const values: JSONObject = {}
+
+    for (const entry of Object.entries(this)) {
+      const [key, value] = entry
+      if (this.allowedToRead(key)) {
+        values[key] = value
+      }
+    }
+
+    return values
   }
 }
