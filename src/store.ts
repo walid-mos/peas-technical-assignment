@@ -1,4 +1,4 @@
-import { JSONArray, JSONObject, JSONPrimitive } from "./json-types";
+import { JSONArray, JSONObject, JSONPrimitive, JSONValue } from "./json-types";
 import { lazy } from "./lazy";
 
 export type Permission = "r" | "w" | "rw" | "none";
@@ -95,7 +95,16 @@ export class Store implements IStore {
   }
 
   writeEntries(entries: JSONObject): void {
-    throw new Error("Method not implemented.");
+    for (const entry of Object.entries(entries)) {
+        const [key, value] = entry
+        let store: Store = this
+        if (typeof value === "object" && !Array.isArray(value) && value !== null) {
+            store = new Store()
+            this.write(key, store)
+            return store.writeEntries(value)
+        }
+        store.write(key, value)
+    }
   }
 
   entries(): JSONObject {
