@@ -1,26 +1,26 @@
 {
-  "compilerOptions": {
-    // Base Options recommended for all projects
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "target": "es2022",
-    "allowJs": true,
-    "resolveJsonModule": true,
-    "moduleDetection": "force",
-    "isolatedModules": true,
-    "experimentalDecorators": true,
+	"compilerOptions": {
+		// Base Options recommended for all projects
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"target": "es2022",
+		"allowJs": true,
+		"resolveJsonModule": true,
+		"moduleDetection": "force",
+		"isolatedModules": true,
+		"experimentalDecorators": true,
 
-    // Enable strict type checking 
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
+		// Enable strict type checking
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
 
-    "module": "preserve",
-    "noEmit": true,
-    "lib": ["es2022", "dom"],
+		"module": "preserve",
+		"noEmit": true,
+		"lib": ["es2022", "dom"],
 
-    "types": ["jest", "node"]
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "**/*.spec.ts"]
+		"types": ["jest", "node"]
+	},
+	"include": ["src/**/*.ts"],
+	"exclude": ["node_modules", "**/*.spec.ts"]
 }
