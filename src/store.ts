@@ -38,7 +38,10 @@ function findPermission(instance: Store, key: string): Permission | undefined {
 	return undefined
 }
 
-export function Restrict(permission: Permission = 'none', restrictPath?: unknown): PropertyDecorator {
+export function Restrict(
+	permission: Permission = 'none',
+	restrictPath?: unknown
+): PropertyDecorator {
 	if (restrictPath) restrictedMap.set(restrictPath, permission)
 
 	return (target: unknown, propertyKey: string | symbol) => {

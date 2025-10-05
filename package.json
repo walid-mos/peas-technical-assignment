@@ -6,13 +6,15 @@
 		"test": "jest",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
-		"lint": "biome check ."
+		"lint": "biome check .",
+		"type-check": "tsc --noEmit"
 	},
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
 		"@biomejs/biome": "^2.2.5",
 		"@types/jest": "^29.5.1",
+		"@types/node": "^24.6.2",
 		"jest": "^29.5.0",
 		"prettier": "^3.6.2",
 		"ts-jest": "^29.1.0",
