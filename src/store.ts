@@ -39,59 +39,55 @@ export function Restrict(permission: Permission = "none", restrictPath?: unknown
 }
 
 export class Store implements IStore {
-  defaultPolicy = "rw" as const
+  defaultPolicy: Permission = "rw" 
   data = new Map()
 
   allowedToRead(key: string): boolean {
     const specificPermissions: Permission = restrictedMap.get(buildKey(this.constructor.name, key))!
-    const defaultPermission = readPermission.includes(this.defaultPolicy)
-    const isAllowed = readPermission.includes(specificPermissions) || defaultPermission
+    const isSpecificPermission = specificPermissions ? readPermission.includes(specificPermissions) : undefined
+    const isDefaultPermission = readPermission.includes(this.defaultPolicy)
+    const isAllowed = isSpecificPermission ?? isDefaultPermission
 
     return isAllowed
   }
 
   allowedToWrite(key: string): boolean {
-    if (!writePermission.includes(this.defaultPolicy)) return false
-
     const specificPermissions: Permission = restrictedMap.get(buildKey(this.constructor.name, key))!
-    const defaultPermission = writePermission.includes(this.defaultPolicy)
-    const isAllowed = writePermission.includes(specificPermissions) || defaultPermission
+    const isSpecificPermission = specificPermissions ? writePermission.includes(specificPermissions) : undefined
+    const isDefaultPermission = writePermission.includes(this.defaultPolicy)
+    const isAllowed = isSpecificPermission ?? isDefaultPermission
 
     return isAllowed
   }
 
   read(path: string): StoreResult {
-    const keys = path.split(':') 
-    if (!keys[0] || !this.allowedToRead(keys[0])) throw new Error()
+    const [firstKey, ...childKeys] = path.split(':') 
+    if (!firstKey || !this.allowedToRead(firstKey)) throw new Error()
 
-    if (keys.length > 1) {
-        const childKeys = keys.shift()
-        if (childKeys) {
-            return this.read(childKeys)
-        }
-    }
-
-    const value = this.data.get(path) as StoreValue
+    let value = this.data.get(firstKey)
     
     if (typeof value === "function") {
-        return lazy(value)()
+        value = value()
     }
 
-    return this.data.get(path)
+    if (childKeys.length > 0) {
+        return value.read(childKeys.join(':'))
+    }
+
+    return value
   }
 
   write(path: string, value: StoreValue): StoreValue {
-    const keys = path.split(':') 
-    const firstKey = keys[0]
+    const [firstKey, ...childKeys] = path.split(':') 
     if (!firstKey || !this.allowedToWrite(firstKey)) throw new Error()
 
-    if (keys.length > 1) {
-        const childKeys = keys.shift()
-        if (childKeys) {
-            const permission = restrictedMap.get([this, firstKey])
-            Restrict(permission, [this, childKeys[0]])
-            return this.write(childKeys, value)
+    if (childKeys.length > 0) {
+        let nestedStore = this.read(firstKey)
+        if (!(nestedStore instanceof Store)) {
+            nestedStore = new Store()
+            this.data.set(firstKey, nestedStore)
         }
+        return nestedStore.write(childKeys.join(':'), value)
     }
         
     this.data.set(path, value)
