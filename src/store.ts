@@ -66,6 +66,11 @@ export class Store implements IStore {
 
     let value = this.data.get(firstKey)
     
+    if (!value && firstKey in this) {
+        value = this[firstKey as keyof this]
+        this.data.set(firstKey, value)
+    }
+
     if (typeof value === "function") {
         value = value()
     }
