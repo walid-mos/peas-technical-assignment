@@ -20,18 +20,35 @@ export interface IStore {
   entries(): JSONObject;
 }
 
-export function Restrict(...params: unknown[]): any {
+const restrictedMap: Map<unknown, Permission> = new Map()
+const readPermission: Array<Permission> = ["r", "rw"]
+const writePermission: Array<Permission> = ["w", "rw"]
+
+export function Restrict(permission: Permission = "none"): Function {
+    return function (target: unknown, propertyKey: string) {
+        restrictedMap.set([target, propertyKey], permission)   
+    }
 }
 
 export class Store implements IStore {
   defaultPolicy: Permission = "rw";
 
   allowedToRead(key: string): boolean {
-    throw new Error("Method not implemented.");
+    if (!readPermission.includes(this.defaultPolicy)) return false
+
+    const specificPermissions = restrictedMap.get([this, key]) as Permission
+    const isAllowed = !specificPermissions || readPermission.includes(specificPermissions)
+
+    return isAllowed
   }
 
   allowedToWrite(key: string): boolean {
-    throw new Error("Method not implemented.");
+    if (!writePermission.includes(this.defaultPolicy)) return false
+
+    const specificPermissions = restrictedMap.get([this, key]) as Permission
+    const isAllowed = !specificPermissions || writePermission.includes(specificPermissions)
+
+    return isAllowed
   }
 
   read(path: string): StoreResult {
