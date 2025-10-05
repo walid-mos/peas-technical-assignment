@@ -54,14 +54,31 @@ export class Store implements IStore {
   }
 
   read(path: string): StoreResult {
-    if (!this.allowedToRead(path)) throw new Error()
+    const keys = path.split(':') 
+    if (!keys[0] || !this.allowedToRead(keys[0])) throw new Error()
+
+    if (keys.length > 1) {
+        const childKeys = keys.shift()
+        if (childKeys) {
+            return this.read(childKeys)
+        }
+    }
 
     return this.data.get(path)
   }
 
   write(path: string, value: StoreValue): StoreValue {
-    if (!this.allowedToWrite(path)) throw new Error()
+    const keys = path.split(':') 
+    const firstKey = keys[0]
+    if (!firstKey || !this.allowedToWrite(firstKey)) throw new Error()
 
+    if (keys.length > 1) {
+        const childKeys = keys.shift()
+        if (childKeys) {
+            return this.write(childKeys, value)
+        }
+    }
+        
     this.data.set(path, value)
     return this.data.get(path)
   }
