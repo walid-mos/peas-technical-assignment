@@ -17,13 +17,16 @@ export interface IStore {
 	entries(): JSONObject
 }
 
-const restrictedMap: Map<unknown, Permission> = new Map()
+// Export for testing purposes - allows cleanup and isolated testing
+export const restrictedMap: Map<unknown, Permission> = new Map()
 const readPermissions: Array<Permission> = ['r', 'rw']
 const writePermissions: Array<Permission> = ['w', 'rw']
 
-const buildKey = (store: string, key: string | symbol) => `${store}:${key.toString()}`
+// Export for testing purposes - allows isolated unit testing
+export const buildKey = (store: string, key: string | symbol) => `${store}:${key.toString()}`
 
-function findPermission(instance: Store, key: string): Permission | undefined {
+// Export for testing purposes - allows isolated unit testing
+export function findPermission(instance: Store, key: string): Permission | undefined {
 	let currentClass = instance.constructor
 
 	while (currentClass?.name && currentClass.name !== 'Object') {
