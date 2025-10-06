@@ -7,12 +7,12 @@
 
 import type { JSONObject } from '../src/json-types'
 import {
-	type Permission,
-	Restrict,
-	Store,
 	buildKey,
 	findPermission,
+	type Permission,
+	Restrict,
 	restrictedMap,
+	Store,
 } from '../src/store'
 
 // ============================================================================
@@ -130,6 +130,7 @@ describe('@Restrict Decorator', () => {
 	})
 
 	it('should set permission in restrictedMap', () => {
+		// biome-ignore lint/correctness/noUnusedVariables: Class is used via decorator
 		class TestStore extends Store {
 			@Restrict('r')
 			public testProp?: string
@@ -141,6 +142,7 @@ describe('@Restrict Decorator', () => {
 	})
 
 	it('should default to "none" when no permission provided', () => {
+		// biome-ignore lint/correctness/noUnusedVariables: Class is used via decorator
 		class TestStore extends Store {
 			@Restrict()
 			public restrictedProp?: string
@@ -161,6 +163,7 @@ describe('@Restrict Decorator', () => {
 	it('should work with symbol property keys', () => {
 		const symbolProp = Symbol('symbolProp')
 
+		// biome-ignore lint/correctness/noUnusedVariables: Class is used via decorator
 		class TestStore extends Store {
 			@Restrict('w')
 			public [symbolProp]?: string
@@ -179,6 +182,7 @@ describe('@Restrict Decorator', () => {
 	})
 
 	it('should allow dynamic permission changes', () => {
+		// biome-ignore lint/correctness/noUnusedVariables: Class is used via decorator
 		class TestStore extends Store {
 			@Restrict('r')
 			public dynamicProp?: string
@@ -308,14 +312,18 @@ describe('Permission System - allowedToRead()', () => {
 		expect(store.allowedToRead('restrictedProp')).toBe(false)
 	})
 
-	it('should call findPermission with correct arguments', () => {
-		const store = new Store()
-		const spy = jest.spyOn(store as any, 'allowedToRead')
+	it('should delegate to findPermission for specific permissions', () => {
+		class TestStore extends Store {
+			@Restrict('r')
+			public specificProp?: string
+		}
+		const store = new TestStore()
 
-		store.allowedToRead('testKey')
+		// Specific permission should override default
+		expect(store.allowedToRead('specificProp')).toBe(true)
 
-		expect(spy).toHaveBeenCalledWith('testKey')
-		spy.mockRestore()
+		// Non-specific should use default
+		expect(store.allowedToRead('otherKey')).toBe(true)
 	})
 })
 
@@ -371,14 +379,18 @@ describe('Permission System - allowedToWrite()', () => {
 		expect(store.allowedToWrite('restrictedProp')).toBe(false)
 	})
 
-	it('should call findPermission with correct arguments', () => {
-		const store = new Store()
-		const spy = jest.spyOn(store as any, 'allowedToWrite')
+	it('should delegate to findPermission for specific permissions', () => {
+		class TestStore extends Store {
+			@Restrict('w')
+			public specificProp?: string
+		}
+		const store = new TestStore()
 
-		store.allowedToWrite('testKey')
+		// Specific permission should override default
+		expect(store.allowedToWrite('specificProp')).toBe(true)
 
-		expect(spy).toHaveBeenCalledWith('testKey')
-		spy.mockRestore()
+		// Non-specific should use default
+		expect(store.allowedToWrite('otherKey')).toBe(true)
 	})
 })
 
@@ -622,7 +634,8 @@ describe('Write Operations - Simple Cases', () => {
 		store.write('key', 'value')
 
 		expect(store.data.has('key')).toBe(true)
-		expect((store as any).key).toBeUndefined()
+		// Key should not be added as instance property
+		expect(Object.hasOwn(store, 'key')).toBe(false)
 	})
 })
 
@@ -852,9 +865,9 @@ describe('writeEntries()', () => {
 		const entries = {
 			nested: {
 				deep: {
-					value: 'deepValue'
-				}
-			}
+					value: 'deepValue',
+				},
+			},
 		}
 
 		store.writeEntries(entries)
@@ -983,9 +996,9 @@ describe('Complex Integration Scenarios', () => {
 				name: 'John Doe',
 				profile: {
 					age: 30,
-					city: 'Paris'
-				}
-			}
+					city: 'Paris',
+				},
+			},
 		}
 
 		store.writeEntries(data)
@@ -1009,9 +1022,9 @@ describe('Complex Integration Scenarios', () => {
 					string: 'value',
 					number: 42,
 					boolean: true,
-					null: null
-				}
-			}
+					null: null,
+				},
+			},
 		})
 
 		expect(store.read('level1:array')).toEqual([1, 2, 3])
@@ -1059,8 +1072,8 @@ describe('Complex Integration Scenarios', () => {
 		for (let i = 0; i < 100; i++) {
 			largeObject[`key${i}`] = {
 				nested: {
-					value: `value${i}`
-				}
+					value: `value${i}`,
+				},
 			}
 		}
 
@@ -1149,7 +1162,7 @@ describe('Edge Cases & Error Handling', () => {
 		store.writeEntries({
 			a: obj1,
 			b: obj2,
-			c: obj1 // Same reference as 'a'
+			c: obj1, // Same reference as 'a'
 		})
 
 		expect(store.read('a:key')).toBe('value1')
